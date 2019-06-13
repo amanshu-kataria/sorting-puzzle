@@ -1,0 +1,126 @@
+*{
+    box-sizing: border-box;
+}
+
+body{
+    margin: 0px;
+    background-color: #62b2d8;
+}
+
+.header{
+    height: 60px;
+    background-color: #ffc926;
+    line-height: 60px;
+}
+
+.headerLogo{
+    margin-left: 2%;
+    font-size: 20px;
+    color: #fff;
+}
+
+.appShell{
+    min-height: 500px;
+    margin-top: 50px;
+    padding: 10px;
+    display: flex;
+}
+
+.leftPanel{
+    width: 15%;
+    padding: 10px;
+    border: 1px solid black;
+}
+
+.centerPanel{
+    width: 65%;
+    border: 1px solid black;   
+    padding: 10px;
+}
+
+.rightPanel{
+    width: 20%;
+    border: 1px solid black;   
+    padding: 10px;
+}
+
+.gridContainer{
+    display: grid;
+    background-color: rgb(135, 135, 135, 0.2);
+    padding: 10px;
+    grid-gap: 5px;
+    border-radius: 5px;
+}
+
+.gridItem{
+    background-color: #ffffffcc;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.mover{
+    background-color: rgba(37, 37, 37, 0.2);
+}
+
+.timer,.moves{
+    margin-bottom: 10px;
+}
+
+.button{
+    width: 80%;
+    border-radius: 5px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.button:hover{
+    cursor: pointer;
+}
+
+.newGame{
+    background-color: #fcad37;
+}
+
+.newGame:hover{
+    background-color: #dd8a0d;
+}
+
+.autoSolve{
+    background-color: #85c33c;
+}
+
+.autoSolve:hover{
+    background-color: #6ca12f;
+}
+
+.shuffleBoard{
+    background-color: #e94c88;
+}
+
+.shuffleBoard:hover{
+    background-color: #e61665;
+}
+
+.movesLabel{
+    height: 30px;
+    line-height: 30px;
+    background-color: #eaeaea;
+    padding-left: 10px;
+    
+}
+
+.allMoves{
+    background-color: #fff;
+    padding: 10px;
+    height: 300px;
+    overflow-y: auto;
+}
+
+.moveItem{
+    height: 30px;
+}
