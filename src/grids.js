@@ -16,11 +16,37 @@ class Grids extends PureComponent {
   };
 
   componentDidMount() {
+    // if grid array is empty create a new grid
     if (!this.props.grid.length) {
       this.props.dispatch(shuffle());
     }
   }
 
+  // on each grid change action it checks for solveable state
+  componentDidUpdate(prevProps, prevState) {
+    let grid = [...this.props.grid];
+    let solved = true;
+    if (grid[grid.length - 1] === null) {
+      for (let i = 0; i < grid.length - 2; i++) {
+        if (grid[i] > grid[i + 1]) {
+          solved = false;
+          break;
+        }
+      }
+
+      if (solved && this.props.status === 0) {
+        setTimeout(() => {
+          alert('Congrats! Puzzle solved');
+          this.props.dispatch({
+            type: 'ON_SOLVED'
+          });
+          localStorage.setItem('status', JSON.stringify(1));
+        }, 200);
+      }
+    }
+  }
+
+  // shuffle grid
   shuffle() {
     const { gridSize } = this.props;
     let grid = [];
@@ -55,60 +81,62 @@ class Grids extends PureComponent {
     return level === this.props.level ? 'levelButon activeLevel' : 'levelButon';
   };
 
+  // move grid item
   moveGrid = gridIndex => {
-    let grid = [...this.props.grid];
-    if (grid[gridIndex] !== null) {
-      const { gridSize } = this.props;
+    if (!this.props.status) {
+      let grid = [...this.props.grid];
+      if (grid[gridIndex] !== null) {
+        const { gridSize } = this.props;
 
-      const top = gridIndex - gridSize;
-      const bottom = gridIndex + gridSize;
-      const left = gridIndex - 1;
-      const right = gridIndex + 1;
+        const top = gridIndex - gridSize;
+        const bottom = gridIndex + gridSize;
+        const left = gridIndex - 1;
+        const right = gridIndex + 1;
 
-      let emptyGrid = -1;
+        let emptyGrid = -1;
 
-      if (top >= 0 && grid[top] === null) {
-        emptyGrid = top;
-      } else if (bottom < grid.length && grid[bottom] === null) {
-        emptyGrid = bottom;
-      } else if (
-        left % gridSize >= 0 &&
-        left % gridSize < gridIndex % gridSize &&
-        grid[left] === null
-      ) {
-        emptyGrid = left;
-      } else if (
-        right % gridSize < gridSize &&
-        right % gridSize > gridIndex % gridSize &&
-        grid[right] === null
-      ) {
-        emptyGrid = right;
+        if (top >= 0 && grid[top] === null) {
+          emptyGrid = top;
+        } else if (bottom < grid.length && grid[bottom] === null) {
+          emptyGrid = bottom;
+        } else if (
+          left % gridSize >= 0 &&
+          left % gridSize < gridIndex % gridSize &&
+          grid[left] === null
+        ) {
+          emptyGrid = left;
+        } else if (
+          right % gridSize < gridSize &&
+          right % gridSize > gridIndex % gridSize &&
+          grid[right] === null
+        ) {
+          emptyGrid = right;
+        }
+
+        if (emptyGrid === -1) {
+          return;
+        }
+
+        const temp = grid[gridIndex];
+        grid[gridIndex] = grid[emptyGrid];
+        grid[emptyGrid] = temp;
+
+        const toCol = emptyGrid % gridSize;
+        const toRow = parseInt(emptyGrid / gridSize);
+
+        const fromCol = gridIndex % gridSize;
+        const fromRow = parseInt(gridIndex / gridSize);
+
+        this.props.dispatch({
+          type: 'UPDATE_HISTORY',
+          move: { toCol, toRow, fromCol, fromRow, tile: temp }
+        });
+
+        this.props.dispatch({
+          type: 'ON_TILE_MOVE',
+          grid
+        });
       }
-
-      if (emptyGrid === -1) {
-        return;
-      }
-
-      const temp = grid[gridIndex];
-      grid[gridIndex] = grid[emptyGrid];
-      grid[emptyGrid] = temp;
-
-      const toCol = emptyGrid % gridSize;
-      const toRow = parseInt(emptyGrid / gridSize);
-
-      const fromCol = gridIndex % gridSize;
-      const fromRow = parseInt(gridIndex / gridSize);
-
-      //todo: check if solved
-      this.props.dispatch({
-        type: 'UPDATE_HISTORY',
-        move: { toCol, toRow, fromCol, fromRow, tile: temp }
-      });
-
-      this.props.dispatch({
-        type: 'ON_TILE_MOVE',
-        grid
-      });
     }
   };
 
@@ -169,7 +197,8 @@ const mapStateToProps = state => {
   return {
     grid: state.store.grid,
     gridSize: state.store.gridSize,
-    level: state.store.level
+    level: state.store.level,
+    status: state.store.status
   };
 };
 

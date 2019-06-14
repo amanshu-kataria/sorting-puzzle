@@ -10,11 +10,11 @@ import logger from 'redux-logger';
 
 const middleware = [];
 
+middleware.push(thunk);
+
 if (process.env.NODE_ENV !== 'production') {
   middleware.push(logger);
 }
-
-middleware.push(thunk);
 
 const store = createStore(reducers, applyMiddleware(...middleware));
 

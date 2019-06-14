@@ -14,18 +14,24 @@ class LeftPanel extends PureComponent {
     };
   }
 
+  // [1,2,3,4,5,6,7,8,9,10,11,12,13,14,null,15]
+
   componentDidMount() {
     let timer = Number(JSON.parse(localStorage.getItem('timer')));
 
     if (Number.isNaN(timer)) {
       this.props.dispatch(newGame());
+      this.startTimer();
     } else {
       const h = Math.floor(timer / 3600);
       const m = Math.floor((timer % 3600) / 60);
       const s = Math.floor((timer % 3600) % 60);
       this.setState({ timer: { h, m, s } });
     }
-    this.startTimer();
+
+    if (!this.props.status) {
+      this.startTimer();
+    }
   }
 
   componentWillUnmount() {
@@ -45,6 +51,11 @@ class LeftPanel extends PureComponent {
           s: 0
         }
       });
+      this.startTimer();
+    }
+
+    if (this.props.status && !prevProps.status) {
+      clearInterval(this.intervalId);
     }
   }
 
@@ -103,7 +114,8 @@ class LeftPanel extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    moves: state.store.totalMoves
+    moves: state.store.totalMoves,
+    status: state.store.status
   };
 };
 
