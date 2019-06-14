@@ -1,12 +1,24 @@
-import React, { PureComponent, Fragment } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { shuffle, newGame } from './Actions';
+
+const levels = [
+  { name: 'Amateur', gridSize: 4 },
+  { name: 'Semi-Pro', gridSize: 5 },
+  { name: 'Professional', gridSize: 6 },
+  { name: 'Legendary', gridSize: 8 }
+];
 
 class Grids extends PureComponent {
   state = {
-    grid: []
+    draggedItemIndex: -1
   };
+
   componentDidMount() {
-    this.shuffle();
+    if (!this.props.grid.length) {
+      this.props.dispatch(shuffle());
+    }
   }
 
   shuffle() {
@@ -27,30 +39,85 @@ class Grids extends PureComponent {
       grid[b] = temp;
     }
 
-    let count = 0;
+    localStorage.setItem('grid', JSON.stringify(grid));
 
-    let randomGrid = new Array(gridSize);
-    for (let i = 0; i < gridSize; i++) {
-      let row = new Array(gridSize);
-      for (let j = 0; j < gridSize; j++) {
-        row[j] = grid[count++];
-      }
-      randomGrid[i] = [...row];
-    }
-
-    this.setState({ grid: randomGrid });
+    this.props.dispatch({
+      type: 'ON_TILE_MOVE',
+      grid
+    });
   }
 
   getGridClass = value => {
     return value ? 'gridItem' : 'gridItem mover';
   };
 
-  onDragStart = (e, i, j) => {
-    console.log(i, ',', j);
+  getLevelClass = level => {
+    return level === this.props.level ? 'levelButon activeLevel' : 'levelButon';
   };
 
-  onGridDrop = e => {
-    console.log(e);
+  moveGrid = gridIndex => {
+    let grid = [...this.props.grid];
+    if (grid[gridIndex] !== null) {
+      const { gridSize } = this.props;
+
+      const top = gridIndex - gridSize;
+      const bottom = gridIndex + gridSize;
+      const left = gridIndex - 1;
+      const right = gridIndex + 1;
+
+      let emptyGrid = -1;
+
+      if (top >= 0 && grid[top] === null) {
+        emptyGrid = top;
+      } else if (bottom < grid.length && grid[bottom] === null) {
+        emptyGrid = bottom;
+      } else if (
+        left % gridSize >= 0 &&
+        left % gridSize < gridIndex % gridSize &&
+        grid[left] === null
+      ) {
+        emptyGrid = left;
+      } else if (
+        right % gridSize < gridSize &&
+        right % gridSize > gridIndex % gridSize &&
+        grid[right] === null
+      ) {
+        emptyGrid = right;
+      }
+
+      if (emptyGrid === -1) {
+        return;
+      }
+
+      const temp = grid[gridIndex];
+      grid[gridIndex] = grid[emptyGrid];
+      grid[emptyGrid] = temp;
+
+      const toCol = emptyGrid % gridSize;
+      const toRow = parseInt(emptyGrid / gridSize);
+
+      const fromCol = gridIndex % gridSize;
+      const fromRow = parseInt(gridIndex / gridSize);
+
+      //todo: check if solved
+      this.props.dispatch({
+        type: 'UPDATE_HISTORY',
+        move: { toCol, toRow, fromCol, fromRow, tile: temp }
+      });
+
+      this.props.dispatch({
+        type: 'ON_TILE_MOVE',
+        grid
+      });
+    }
+  };
+
+  changeLevel = (gridSize, level) => {
+    if (this.props.level !== level) {
+      this.props.dispatch({ type: 'ON_LEVEL_CHANGE', gridSize, level });
+      this.props.dispatch(newGame());
+      localStorage.setItem('level', JSON.stringify(level));
+    }
   };
 
   render() {
@@ -62,23 +129,29 @@ class Grids extends PureComponent {
             gridTemplateColumns: `repeat(${this.props.gridSize}, auto)`
           }}
         >
-          {this.state.grid.map((row, i) => {
+          {this.props.grid.map((row, i) => {
             return (
-              <Fragment key={`row${i}`}>
-                {row.map((column, j) => {
-                  return (
-                    <div
-                      className={this.getGridClass(column)}
-                      key={`${i}${j}`}
-                      draggable={true}
-                      onDragStart={e => this.onDragStart(e, i, j)}
-                      onDrop={this.onGridDrop}
-                    >
-                      {column}
-                    </div>
-                  );
-                })}
-              </Fragment>
+              <div
+                className={this.getGridClass(row)}
+                key={`${row}`}
+                onClick={() => this.moveGrid(i)}
+              >
+                {row}
+              </div>
+            );
+          })}
+        </div>
+        <div className="levels">
+          {levels.map(level => {
+            return (
+              <div className="levelItem" key={level.name}>
+                <div
+                  className={this.getLevelClass(level.name)}
+                  onClick={() => this.changeLevel(level.gridSize, level.name)}
+                >
+                  {level.name}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -88,7 +161,16 @@ class Grids extends PureComponent {
 }
 
 Grids.propTypes = {
-  gridSize: PropTypes.number.isRequired
+  gridSize: PropTypes.number.isRequired,
+  grid: PropTypes.array.isRequired
 };
 
-export default Grids;
+const mapStateToProps = state => {
+  return {
+    grid: state.store.grid,
+    gridSize: state.store.gridSize,
+    level: state.store.level
+  };
+};
+
+export default connect(mapStateToProps)(Grids);
